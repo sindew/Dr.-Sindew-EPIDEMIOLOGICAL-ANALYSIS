@@ -1,0 +1,220 @@
+############################################################
+ONCHOCERCIASIS DATA VISUALIZATION PIPELINE
+Mf DISTRIBUTION AND MDA COVERAGE ANALYSIS
+############################################################
+############################################################
+1. LOAD REQUIRED LIBRARIES
+############################################################
+library(tidyverse)
+library(ggplot2)
+library(hrbrthemes)
+library(plotly)
+############################################################
+2. MICROFILARIAE (Mf) LEFT VS RIGHT ANALYSIS
+############################################################
+Convert wide data to long format
+CT1_long <- CT1 %>%
+pivot_longer(
+cols = c(Mf..left., Mf..right.),
+names_to = "Side",
+values_to = "Mf"
+)
+############################################################
+3. COUNT SAMPLES WITH Mf > 100
+############################################################
+count_100 <- CT1_long %>%
+group_by(Side) %>%
+summarise(
+n_over100 = sum(Mf > 100, na.rm = TRUE)
+)
+View counts
+count_100
+############################################################
+4. BOXPLOT: LEFT VS RIGHT Mf DISTRIBUTION
+############################################################
+Mf_plot <- ggplot(
+CT1_long,
+aes(x = Side, y = Mf, fill = Side)
+) +
+Boxplot
+geom_boxplot() +
+Add sample counts >100
+geom_text(
+data = count_100,
+aes(
+x = Side,
+y = max(CT1_long$Mf, na.rm = TRUE) * 1.05,
+label = paste0("n >100 = ", n_over100)
+),
+inherit.aes = FALSE,
+fontface = "bold"
+) +
+
+Custom colors
+scale_fill_manual(
+values = c(
+"Mf..left." = "red",
+"Mf..right." = "darkgreen"
+)
+) +
+Theme
+theme_classic() +
+Labels
+labs(
+x = "Side",
+y = "Mf count",
+title = "Left vs Right Mf Count Distribution"
+)
+Display plot
+plot(Mf_plot)
+############################################################
+# Analysing Ivermectin MDA coverage from 2001 to 2021 in Keffa and Sheka zones of Southwest Ethiopia: Analysis pipeline:
+#LOAD MDA COVERAGE DATA
+############################################################
+coverage1 <- read.csv(
+"C:/Users/sfeleke/OneDrive - LA TROBE UNIVERSITY (1)/Desktop/Sindew/Sindew 2021/My LTU File_2022/Keffa Sheka Review Papaer 2022/Coverage_Keffa_Sheka_R.csv"
+)
+############################################################
+6. DATA CLEANING
+############################################################
+Replace district name
+coverage1$District[
+coverage1$District == "Saylom"
+] <- "Saylem"
+Check district names
+unique(coverage1$District)
+############################################################
+7. REPORTED VS SURVEY COVERAGE PLOT
+############################################################
+K <- ggplot(coverage1) +
+##########################################################
+Reported coverage points
+##########################################################
+geom_jitter(
+aes(
+x = District,
+y = Reported_coverage....,
+color = "Reported coverage"
+),
+width = 0.15,
+size = 2.5
+) +
+##########################################################
+Survey coverage points
+##########################################################
+geom_jitter(
+aes(
+x = District,
+y = Survey_coverage....,
+color = "Survey coverage"
+),
+width = 0.15,
+size = 2.5
+) +
+##########################################################
+Connecting lines
+##########################################################
+geom_segment(
+aes(
+x = District,
+xend = District,
+y = Survey_coverage....,
+yend = Reported_coverage....
+),
+alpha = 0.6
+) +
+##########################################################
+Coordinate flip
+##########################################################
+coord_flip() +
+##########################################################
+Theme
+##########################################################
+theme_ipsum() +
+##########################################################
+Manual colors
+##########################################################
+scale_color_manual(
+values = c(
+"Reported coverage" = "red",
+"Survey coverage" = "darkgreen"
+),
+name = ""
+) +
+##########################################################
+WHO coverage threshold line
+##########################################################
+
+geom_hline(
+yintercept = 80,
+linetype = "dashed"
+) +
+##########################################################
+P-value annotations
+##########################################################
+annotate(
+"text",
+label = "Survey: p = 0.011",
+x = 6,
+y = 70,
+family = "Times New Roman",
+fontface = "bold",
+size = 4
+) +
+annotate(
+"text",
+label = "Report: p = 0.49",
+x = 4.5,
+y = 70,
+family = "Times New Roman",
+fontface = "bold",
+size = 4
+) +
+##########################################################
+Axis labels
+##########################################################
+labs(
+x = "",
+y = "Coverage (%)"
+) +
+##########################################################
+Plot formatting
+##########################################################
+theme(
+# Overall text
+text = element_text(
+  family = "Times New Roman",
+  size = 12
+),
+
+# District names
+axis.text.y = element_text(
+  face = "bold",
+  family = "Times New Roman",
+  size = 12,
+  color = "black"
+),
+# X-axis values
+axis.text.x = element_text(
+  family = "Times New Roman",
+  size = 12,
+  color = "black"
+),
+# Axis titles
+axis.title = element_text(
+  face = "bold",
+  family = "Times New Roman",
+  size = 12
+),
+# Legend text
+legend.text = element_text(
+  family = "Times New Roman",
+  size = 12
+),
+# Remove legend title
+legend.title = element_blank()
+)
+############################################################
+8. DISPLAY COVERAGE PLOT
+############################################################
+plot(K)
